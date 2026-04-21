@@ -1,0 +1,162 @@
+{
+  "total_posts": 566,
+  "sentiment_distribution": {
+    "positive": {
+      "count": 313,
+      "percentage": 55.3
+    },
+    "negative": {
+      "count": 139,
+      "percentage": 24.56
+    },
+    "neutral": {
+      "count": 114,
+      "percentage": 20.14
+    }
+  },
+  "subreddit_breakdown": {
+    "stocks": {
+      "positive": 63,
+      "negative": 28,
+      "neutral": 18
+    },
+    "IndianStockMarket": {
+      "positive": 39,
+      "neutral": 25,
+      "negative": 15
+    },
+    "investing": {
+      "positive": 52,
+      "negative": 20,
+      "neutral": 13
+    },
+    "wallstreetbets": {
+      "positive": 159,
+      "negative": 76,
+      "neutral": 58
+    }
+  },
+  "numeric_stats": {
+    "score": {
+      "mean": 1.0,
+      "median": 1.0,
+      "std": 0.0,
+      "min": "1",
+      "max": "1",
+      "q25": 1.0,
+      "q75": 1.0
+    },
+    "num_comments": {
+      "mean": 0.0,
+      "median": 0.0,
+      "std": 0.0,
+      "min": "0",
+      "max": "0",
+      "q25": 0.0,
+      "q75": 0.0
+    },
+    "word_count": {
+      "mean": 46.12,
+      "median": 24.0,
+      "std": 56.03,
+      "min": "4",
+      "max": "381",
+      "q25": 13.0,
+      "q75": 52.0
+    },
+    "engagement": {
+      "mean": 1.0,
+      "median": 1.0,
+      "std": 0.0,
+      "min": "1",
+      "max": "1",
+      "q25": 1.0,
+      "q75": 1.0
+    }
+  },
+  "top_words": {
+    "positive": [
+      "wsb",
+      "year",
+      "stock",
+      "total",
+      "post",
+      "not",
+      "comment",
+      "market",
+      "submission",
+      "want",
+      "please",
+      "like",
+      "first",
+      "best",
+      "share",
+      "account",
+      "seen",
+      "gold",
+      "removed",
+      "also"
+    ],
+    "negative": [
+      "not",
+      "market",
+      "would",
+      "like",
+      "stock",
+      "one",
+      "deal",
+      "trade",
+      "people",
+      "year",
+      "company",
+      "going",
+      "see",
+      "china",
+      "nothing",
+      "back",
+      "money",
+      "way",
+      "buy",
+      "think"
+    ],
+    "neutral": [
+      "market",
+      "removed",
+      "buy",
+      "stock",
+      "2032",
+      "research",
+      "img",
+      "emote",
+      "2th52",
+      "reach",
+      "globally",
+      "cagr",
+      "allied",
+      "not",
+      "one",
+      "know",
+      "year",
+      "last",
+      "billion",
+      "get"
+    ]
+  },
+  "available_plots": [
+    "sentiment_distribution",
+    "sentiment_by_subreddit",
+    "wordclouds",
+    "sentiment_over_time",
+    "engagement_analysis",
+    "text_length_distribution",
+    "top_bigrams",
+    "top_unigrams",
+    "hourly_heatmap",
+    "radar_chart",
+    "descriptive_dashboard",
+    "metrics_comparison",
+    "confusion_matrices_all",
+    "tuning_improvement",
+    "roc_curves"
+  ]
+}

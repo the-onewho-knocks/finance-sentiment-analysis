@@ -1,0 +1,30 @@
+# Data Collection
+praw
+
+# Data Processing
+pandas
+numpy
+nltk
+scikit-learn
+scipy
+
+# Visualization
+matplotlib
+seaborn
+wordcloud
+plotly
+
+# Backend
+fastapi
+uvicorn
+pydantic
+python-dotenv
+python-multipart
+
+# Utilities
+joblib
+requests
+
+# Testing
+httpx
+pytest

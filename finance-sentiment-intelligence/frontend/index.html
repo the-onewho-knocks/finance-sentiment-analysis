@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finance Sentiment Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #f5f6f8;
+    --surface:   #ffffff;
+    --border:    #e2e5ea;
+    --text:      #1a1d23;
+    --muted:     #6b7280;
+    --light:     #9ca3af;
+    --pos:       #16a34a;
+    --pos-bg:    #f0fdf4;
+    --pos-bdr:   #bbf7d0;
+    --neu:       #b45309;
+    --neu-bg:    #fffbeb;
+    --neu-bdr:   #fde68a;
+    --neg:       #dc2626;
+    --neg-bg:    #fef2f2;
+    --neg-bdr:   #fecaca;
+    --accent:    #2563eb;
+    --accent-lt: #eff6ff;
+    --radius:    8px;
+    --shadow:    0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 56px;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .logo { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+  #api-status { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+  #status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--light); transition: background .3s; }
+  #status-dot.online  { background: var(--pos); }
+  #status-dot.offline { background: var(--neg); }
+
+  /* ── Layout ── */
+  .layout { display: flex; min-height: calc(100vh - 56px); }
+
+  /* ── Sidebar ── */
+  aside {
+    width: 196px; flex-shrink: 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 12px 10px;
+    display: flex; flex-direction: column; gap: 2px;
+    position: sticky; top: 56px; height: calc(100vh - 56px);
+    overflow-y: auto;
+  }
+  .nav-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .6px; color: var(--light); padding: 12px 10px 4px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 9px;
+    padding: 9px 10px; border-radius: var(--radius);
+    font-size: 13px; font-weight: 500; color: var(--muted);
+    cursor: pointer; border: none; background: none; width: 100%; text-align: left;
+    transition: background .15s, color .15s;
+  }
+  .nav-item:hover { background: var(--bg); color: var(--text); }
+  .nav-item.active { background: var(--accent-lt); color: var(--accent); }
+  .nav-icon { font-size: 14px; width: 18px; text-align: center; }
+  .api-wrap { padding: 12px 10px; border-top: 1px solid var(--border); margin-top: auto; }
+  .api-wrap label { display: block; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--light); margin-bottom: 5px; }
+  #base-url {
+    width: 100%; padding: 6px 8px;
+    border: 1px solid var(--border); border-radius: 6px;
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    background: var(--bg); color: var(--text);
+  }
+  #base-url:focus { outline: none; border-color: var(--accent); }
+
+  /* ── Main ── */
+  main { flex: 1; padding: 28px; min-width: 0; }
+  .page { display: none; }
+  .page.active { display: block; animation: fadein .2s ease; }
+  @keyframes fadein { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; } }
+
+  h2 { font-size: 18px; font-weight: 600; margin-bottom: 3px; }
+  .page-desc { color: var(--muted); font-size: 13px; margin-bottom: 22px; }
+
+  /* ── Cards ── */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
+  .card-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); margin-bottom: 14px; }
+
+  /* ── Forms ── */
+  .form-group { margin-bottom: 14px; }
+  .form-group label { display: block; font-size: 12px; font-weight: 500; color: var(--muted); margin-bottom: 5px; }
+  textarea, select, input[type=text] {
+    width: 100%; padding: 9px 12px;
+    border: 1px solid var(--border); border-radius: var(--radius);
+    font-family: inherit; font-size: 13px;
+    background: var(--surface); color: var(--text);
+    transition: border-color .15s;
+  }
+  textarea:focus, select:focus, input:focus { outline: none; border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 110px; }
+  select { cursor: pointer; }
+
+  /* ── Buttons ── */
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; border-radius: var(--radius); font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: opacity .15s, transform .1s; }
+  .btn:active { transform: scale(.98); }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { opacity: .9; }
+  .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-outline { background: none; border: 1px solid var(--border); color: var(--text); }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+  .flex-end { display: flex; justify-content: flex-end; }
+
+  /* ── Badges ── */
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .badge-pos { background: var(--pos-bg); color: var(--pos); border: 1px solid var(--pos-bdr); }
+  .badge-neu { background: var(--neu-bg); color: var(--neu); border: 1px solid var(--neu-bdr); }
+  .badge-neg { background: var(--neg-bg); color: var(--neg); border: 1px solid var(--neg-bdr); }
+
+  /* ── Result ── */
+  #result-panel { display: none; }
+  .result-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
+  .result-sentiment { font-size: 26px; font-weight: 600; text-transform: capitalize; }
+  .result-sentiment.pos { color: var(--pos); }
+  .result-sentiment.neu { color: var(--neu); }
+  .result-sentiment.neg { color: var(--neg); }
+  .result-conf { font-size: 13px; color: var(--muted); }
+  .result-conf strong { color: var(--text); font-size: 20px; }
+
+  .prob-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+  .prob-label { width: 62px; font-size: 12px; color: var(--muted); text-transform: capitalize; }
+  .prob-bar-bg { flex: 1; height: 7px; background: var(--bg); border-radius: 4px; overflow: hidden; }
+  .prob-bar-fill { height: 100%; border-radius: 4px; width: 0%; transition: width .6s ease; }
+  .prob-bar-fill.pos { background: var(--pos); }
+  .prob-bar-fill.neu { background: var(--neu); }
+  .prob-bar-fill.neg { background: var(--neg); }
+  .prob-pct { width: 42px; text-align: right; font-size: 12px; font-family: 'DM Mono', monospace; }
+
+  .cleaned-box { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); line-height: 1.7; max-height: 72px; overflow-y: auto; }
+  .meta-row { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 10px; }
+  .meta-item { font-size: 12px; color: var(--muted); }
+  .meta-item strong { color: var(--text); }
+
+  /* ── Stat grid ── */
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .stat-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
+  .stat-box-label { font-size: 11px; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
+  .stat-box-val { font-size: 24px; font-weight: 600; line-height: 1.1; }
+  .stat-box-sub { font-size: 11px; color: var(--light); margin-top: 4px; }
+
+  /* ── Distribution bars ── */
+  .dist-row { margin-bottom: 12px; }
+  .dist-header { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 12px; }
+  .dist-track { height: 7px; background: var(--bg); border-radius: 4px; overflow: hidden; }
+  .dist-fill { height: 100%; border-radius: 4px; transition: width .7s ease; }
+
+  /* ── Two col ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 720px) { .two-col { grid-template-columns: 1fr; } aside { display: none; } }
+
+  /* ── Subreddit table ── */
+  .sub-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .sub-table th { text-align: left; padding: 7px 10px; font-size: 11px; font-weight: 600; color: var(--muted); border-bottom: 1px solid var(--border); }
+  .sub-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  .sub-table tr:last-child td { border-bottom: none; }
+  .sub-table tr:hover td { background: var(--bg); }
+  .sub-mini { display: flex; height: 6px; border-radius: 3px; overflow: hidden; width: 90px; gap: 1px; }
+
+  /* ── Word tags ── */
+  .word-list { display: flex; flex-wrap: wrap; gap: 5px; }
+  .word-tag { padding: 3px 9px; border-radius: 20px; font-size: 11px; background: var(--bg); border: 1px solid var(--border); color: var(--muted); }
+  .tw-section { margin-bottom: 12px; }
+  .tw-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: capitalize; margin-bottom: 5px; }
+
+  /* ── Plot viewer ── */
+  #plot-container { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); min-height: 260px; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-top: 14px; }
+  #plot-container img { max-width: 100%; display: block; }
+  .plot-empty { color: var(--light); font-size: 13px; }
+
+  /* ── Model chips ── */
+  .model-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+  .model-chip { padding: 5px 13px; border-radius: 20px; border: 1px solid var(--border); font-size: 12px; font-weight: 500; color: var(--muted); background: var(--surface); }
+
+  /* ── Compare ── */
+  .compare-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .compare-row:last-child { border-bottom: none; }
+  .compare-model { font-size: 13px; color: var(--text); }
+  .compare-right { display: flex; align-items: center; gap: 10px; }
+
+  /* ── Health ── */
+  .health-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .health-row:last-child { border-bottom: none; }
+  .h-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .h-dot.ok  { background: var(--pos); }
+  .h-dot.err { background: var(--neg); }
+  .health-label { flex: 1; font-size: 13px; color: var(--muted); }
+  .health-value { font-size: 13px; font-weight: 500; color: var(--text); }
+
+  /* ── Spinner ── */
+  .spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .6s linear infinite; vertical-align: middle; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Alert ── */
+  .alert { padding: 10px 14px; border-radius: var(--radius); font-size: 13px; margin-top: 12px; }
+  .alert-err  { background: var(--neg-bg); border: 1px solid var(--neg-bdr); color: var(--neg); }
+  .alert-info { background: var(--accent-lt); border: 1px solid #bfdbfe; color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    Finance Sentiment Intelligence
+  </div>
+  <div id="api-status">
+    <div id="status-dot"></div>
+    <span id="status-text">Not connected</span>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside>
+    <div class="nav-label">Tools</div>
+    <button class="nav-item active" data-page="analyzer" onclick="showPage(this,'analyzer')">
+      <span class="nav-icon">🔍</span> Analyzer
+    </button>
+    <button class="nav-item" data-page="dashboard" onclick="showPage(this,'dashboard')">
+      <span class="nav-icon">📊</span> Dashboard
+    </button>
+    <button class="nav-item" data-page="models" onclick="showPage(this,'models')">
+      <span class="nav-icon">🤖</span> Models
+    </button>
+    <button class="nav-item" data-page="plots" onclick="showPage(this,'plots')">
+      <span class="nav-icon">🖼️</span> Plots
+    </button>
+    <button class="nav-item" data-page="health" onclick="showPage(this,'health')">
+      <span class="nav-icon">💚</span> Health
+    </button>
+
+    <div class="api-wrap">
+      <label>API Base URL</label>
+      <input type="text" id="base-url" value="http://localhost:8000" onchange="checkHealth()">
+    </div>
+  </aside>
+
+  <main>
+
+    <!-- ── Analyzer ── -->
+    <div class="page active" id="page-analyzer">
+      <h2>Sentiment Analyzer</h2>
+      <p class="page-desc">Paste finance-related text to get a sentiment prediction.</p>
+
+      <div class="card">
+        <div class="form-group">
+          <label>Text</label>
+          <textarea id="analyze-text" placeholder="e.g. HDFC Bank Q3 results beat expectations, stock rallied 4%…"></textarea>
+        </div>
+        <div style="max-width:260px" class="form-group">
+          <label>Model</label>
+          <select id="analyze-model">
+            <option value="best">Best (auto-select)</option>
+            <option value="logistic_regression">Logistic Regression</option>
+            <option value="naive_bayes">Naive Bayes</option>
+            <option value="random_forest">Random Forest</option>
+          </select>
+        </div>
+        <div class="flex-end">
+          <button class="btn btn-primary" id="analyze-btn" onclick="runAnalysis()">Analyze</button>
+        </div>
+        <div id="analyze-error"></div>
+      </div>
+
+      <div class="card" id="result-panel">
+        <div class="card-title">Result</div>
+        <div class="result-top">
+          <div class="result-sentiment" id="res-label">—</div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <div class="result-conf">Confidence: <strong id="res-conf">—</strong></div>
+            <div id="res-badge"></div>
+          </div>
+        </div>
+
+        <div class="card-title">Probabilities</div>
+        <div class="prob-row">
+          <span class="prob-label">Positive</span>
+          <div class="prob-bar-bg"><div class="prob-bar-fill pos" id="bar-pos"></div></div>
+          <span class="prob-pct" id="pct-pos">—</span>
+        </div>
+        <div class="prob-row">
+          <span class="prob-label">Neutral</span>
+          <div class="prob-bar-bg"><div class="prob-bar-fill neu" id="bar-neu"></div></div>
+          <span class="prob-pct" id="pct-neu">—</span>
+        </div>
+        <div class="prob-row">
+          <span class="prob-label">Negative</span>
+          <div class="prob-bar-bg"><div class="prob-bar-fill neg" id="bar-neg"></div></div>
+          <span class="prob-pct" id="pct-neg">—</span>
+        </div>
+
+        <div class="card-title" style="margin-top:16px">Cleaned Text</div>
+        <div class="cleaned-box" id="res-cleaned">—</div>
+        <div class="meta-row">
+          <div class="meta-item">Model used: <strong id="res-model">—</strong></div>
+          <div class="meta-item">Word count: <strong id="res-wc">—</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Dashboard ── -->
+    <div class="page" id="page-dashboard">
+      <h2>Analytics Dashboard</h2>
+      <p class="page-desc">Dataset statistics and sentiment breakdown.</p>
+
+      <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+        <button class="btn btn-outline" onclick="loadStats()">↻ Refresh</button>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-box"><div class="stat-box-label">Total Posts</div><div class="stat-box-val" id="stat-total">—</div></div>
+        <div class="stat-box"><div class="stat-box-label">Positive</div><div class="stat-box-val" id="stat-pos" style="color:var(--pos)">—</div><div class="stat-box-sub" id="stat-pos-pct"></div></div>
+        <div class="stat-box"><div class="stat-box-label">Neutral</div><div class="stat-box-val" id="stat-neu" style="color:var(--neu)">—</div><div class="stat-box-sub" id="stat-neu-pct"></div></div>
+        <div class="stat-box"><div class="stat-box-label">Negative</div><div class="stat-box-val" id="stat-neg" style="color:var(--neg)">—</div><div class="stat-box-sub" id="stat-neg-pct"></div></div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <div class="card-title">Sentiment Distribution</div>
+          <div id="dist-bars"><span style="color:var(--light);font-size:13px">Load data to view.</span></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Subreddit Breakdown</div>
+          <div id="subreddit-table"><span style="color:var(--light);font-size:13px">Load data to view.</span></div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <div class="card-title">Top Words by Sentiment</div>
+          <div id="top-words"><span style="color:var(--light);font-size:13px">Load data to view.</span></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Available Plots</div>
+          <div id="plot-list-dash"><span style="color:var(--light);font-size:13px">Load data to view.</span></div>
+        </div>
+      </div>
+
+      <div id="stats-error"></div>
+    </div>
+
+    <!-- ── Models ── -->
+    <div class="page" id="page-models">
+      <h2>Model Explorer</h2>
+      <p class="page-desc">View available models and compare predictions side-by-side.</p>
+
+      <div class="card">
+        <div class="card-title">Available Models</div>
+        <div id="models-list"><span class="spinner"></span></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Compare Predictions</div>
+        <div class="form-group">
+          <label>Input Text</label>
+          <textarea id="compare-text" placeholder="Enter text to compare across all models…" style="min-height:90px"></textarea>
+        </div>
+        <div class="flex-end">
+          <button class="btn btn-primary" onclick="runCompare()">Compare All Models</button>
+        </div>
+        <div id="compare-results" style="margin-top:14px"></div>
+        <div id="compare-error"></div>
+      </div>
+    </div>
+
+    <!-- ── Plots ── -->
+    <div class="page" id="page-plots">
+      <h2>Plot Viewer</h2>
+      <p class="page-desc">Browse visualizations generated by the backend.</p>
+
+      <div class="card">
+        <div class="form-group" style="max-width:360px">
+          <label>Select a Plot</label>
+          <select id="plot-select" onchange="loadPlot()">
+            <option value="">— choose a plot —</option>
+          </select>
+        </div>
+        <div id="plot-container">
+          <div class="plot-empty">Select a plot from the dropdown above</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Health ── -->
+    <div class="page" id="page-health">
+      <h2>System Health</h2>
+      <p class="page-desc">Live API status and loaded model information.</p>
+
+      <div class="card">
+        <div class="card-title">API Status</div>
+        <div id="health-rows"><span class="spinner"></span></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Loaded Models</div>
+        <div id="health-models"><span style="color:var(--light);font-size:13px">—</span></div>
+      </div>
+
+      <div class="flex-end" style="margin-top:-4px">
+        <button class="btn btn-outline" onclick="loadHealth()">↻ Refresh</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  // ── Utilities ──────────────────────────────────────────
+  const $  = id => document.getElementById(id);
+  const api = () => $('base-url').value.replace(/\/$/, '');
+
+  async function apiFetch(path, opts = {}) {
+    const res = await fetch(api() + path, {
+      headers: { 'Content-Type': 'application/json' },
+      ...opts
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || `HTTP ${res.status}`);
+    }
+    return res.json();
+  }
+
+  function showErr(id, msg) { $(id).innerHTML = `<div class="alert alert-err">⚠ ${msg}</div>`; }
+  function clearErr(id)     { $(id).innerHTML = ''; }
+
+  function cls(s) { return s === 'positive' ? 'pos' : s === 'negative' ? 'neg' : 'neu'; }
+
+  function badge(s) {
+    return `<span class="badge badge-${cls(s)}">${s}</span>`;
+  }
+
+  function pct(n) { return (n * 100).toFixed(1) + '%'; }
+
+  // ── Navigation ─────────────────────────────────────────
+  function showPage(btn, id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    $('page-' + id).classList.add('active');
+    btn.classList.add('active');
+    if (id === 'dashboard') loadStats();
+    if (id === 'models')    loadModels();
+    if (id === 'plots')     loadPlotList();
+    if (id === 'health')    loadHealth();
+  }
+
+  // ── Health check (header dot) ──────────────────────────
+  async function checkHealth() {
+    try {
+      const d = await apiFetch('/health');
+      $('status-dot').className   = d.status === 'healthy' ? 'online' : 'offline';
+      $('status-text').textContent = d.status === 'healthy' ? 'Connected' : 'Error';
+    } catch {
+      $('status-dot').className   = 'offline';
+      $('status-text').textContent = 'Offline';
+    }
+  }
+
+  // ── ANALYZER ───────────────────────────────────────────
+  async function runAnalysis() {
+    const text  = $('analyze-text').value.trim();
+    const model = $('analyze-model').value;
+    const btn   = $('analyze-btn');
+    clearErr('analyze-error');
+
+    if (!text) { showErr('analyze-error', 'Please enter some text.'); return; }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Analyzing…';
+
+    try {
+      const d = await apiFetch('/analyze', {
+        method: 'POST',
+        body: JSON.stringify({ text, model })
+      });
+
+      $('result-panel').style.display = 'block';
+
+      const c = cls(d.sentiment);
+      $('res-label').textContent  = d.sentiment;
+      $('res-label').className    = 'result-sentiment ' + c;
+      $('res-conf').textContent   = pct(d.confidence);
+      $('res-badge').innerHTML    = badge(d.sentiment);
+      $('res-cleaned').textContent = d.cleaned_text || '—';
+      $('res-model').textContent  = d.model_used || model;
+      $('res-wc').textContent     = d.word_count ?? '—';
+
+      setBar('pos', d.scores.positive);
+      setBar('neu', d.scores.neutral);
+      setBar('neg', d.scores.negative);
+
+    } catch (e) {
+      showErr('analyze-error', e.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Analyze';
+    }
+  }
+
+  function setBar(key, val) {
+    const p = (val * 100).toFixed(1);
+    $('bar-' + key).style.width    = p + '%';
+    $('pct-' + key).textContent    = p + '%';
+  }
+
+  // ── DASHBOARD ──────────────────────────────────────────
+  async function loadStats() {
+    clearErr('stats-error');
+    try {
+      const d = await apiFetch('/stats');
+
+      $('stat-total').textContent = (d.total_posts || 0).toLocaleString();
+      const dist = d.sentiment_distribution || {};
+
+      ['positive', 'neutral', 'negative'].forEach(s => {
+        const k    = cls(s);
+        const item = dist[s] || {};
+        $(('stat-' + k)).textContent = (item.count || 0).toLocaleString();
+        $(('stat-' + k + '-pct')).textContent = item.percentage != null ? item.percentage.toFixed(1) + '%' : '';
+      });
+
+      // Distribution bars
+      $('dist-bars').innerHTML = ['positive', 'neutral', 'negative'].map(s => {
+        const item = dist[s] || {};
+        const p    = item.percentage || 0;
+        const k    = cls(s);
+        return `<div class="dist-row">
+          <div class="dist-header">
+            <span style="text-transform:capitalize">${s}</span>
+            <span style="color:var(--muted)">${p.toFixed(1)}%</span>
+          </div>
+          <div class="dist-track">
+            <div class="dist-fill" style="width:${p}%;background:var(--${k})"></div>
+          </div>
+        </div>`;
+      }).join('');
+
+      // Subreddit table
+      const subs = d.subreddit_breakdown || {};
+      const subKeys = Object.keys(subs);
+      if (subKeys.length) {
+        $('subreddit-table').innerHTML =
+          `<table class="sub-table">
+            <thead><tr><th>Subreddit</th><th>Posts</th><th>Mix</th></tr></thead>
+            <tbody>` +
+          subKeys.map(name => {
+            const info  = subs[name];
+            const total = info.total || info.count || 0;
+            const pos   = info.positive || 0;
+            const neu   = info.neutral  || 0;
+            const neg   = info.negative || 0;
+            const t     = pos + neu + neg || 1;
+            return `<tr>
+              <td>r/${name}</td>
+              <td>${total.toLocaleString()}</td>
+              <td>
+                <div class="sub-mini">
+                  <div style="width:${pos/t*100}%;background:var(--pos)"></div>
+                  <div style="width:${neu/t*100}%;background:var(--neu)"></div>
+                  <div style="width:${neg/t*100}%;background:var(--neg)"></div>
+                </div>
+              </td>
+            </tr>`;
+          }).join('') +
+          '</tbody></table>';
+      } else {
+        $('subreddit-table').innerHTML = '<span style="color:var(--light);font-size:13px">No data.</span>';
+      }
+
+      // Top words
+      const words = d.top_words || {};
+      $('top-words').innerHTML = Object.keys(words).length
+        ? Object.entries(words).map(([sent, list]) =>
+            `<div class="tw-section">
+              <div class="tw-label">${sent}</div>
+              <div class="word-list">${(list || []).slice(0, 12).map(w => `<span class="word-tag">${w}</span>`).join('')}</div>
+            </div>`
+          ).join('')
+        : '<span style="color:var(--light);font-size:13px">No data.</span>';
+
+      // Available plots — show only the selected 7
+      const allowedValues = ALLOWED_PLOTS.map(p => p.value);
+      const plots = (d.available_plots || []).filter(p => allowedValues.includes(p));
+      const plotsToShow = plots.length ? plots : allowedValues; // fallback: show all 7 labels
+      $('plot-list-dash').innerHTML = `<div class="word-list">${ALLOWED_PLOTS.map(p =>
+        `<span class="word-tag" style="cursor:pointer" onclick="goToPlot('${p.value}')">${p.label}</span>`
+      ).join('')}</div>`;
+
+    } catch (e) {
+      showErr('stats-error', e.message);
+    }
+  }
+
+  // ── MODELS ─────────────────────────────────────────────
+  async function loadModels() {
+    try {
+      const d = await apiFetch('/analyze/models');
+      const models = d.available_models || [];
+      $('models-list').innerHTML =
+        `<div class="model-chips">${models.map(m => `<span class="model-chip">${m}</span>`).join('')}</div>
+         <p style="font-size:12px;color:var(--muted);margin-top:10px">Default: <strong>${d.default_model || 'best'}</strong></p>`;
+    } catch (e) {
+      $('models-list').innerHTML = `<div class="alert alert-err">⚠ ${e.message}</div>`;
+    }
+  }
+
+  async function runCompare() {
+    const text = $('compare-text').value.trim();
+    clearErr('compare-error');
+    if (!text) { showErr('compare-error', 'Please enter text.'); return; }
+
+    const models = ['best', 'logistic_regression', 'naive_bayes', 'random_forest'];
+    $('compare-results').innerHTML = '<span class="spinner"></span> Running…';
+
+    const results = await Promise.allSettled(
+      models.map(m => apiFetch('/analyze', { method: 'POST', body: JSON.stringify({ text, model: m }) }))
+    );
+
+    $('compare-results').innerHTML = results.map((r, i) => {
+      const name = models[i];
+      if (r.status === 'rejected') {
+        return `<div class="compare-row">
+          <span class="compare-model">${name}</span>
+          <span style="font-size:12px;color:var(--neg)">Error</span>
+        </div>`;
+      }
+      const d = r.value;
+      return `<div class="compare-row">
+        <div class="compare-model">${name}</div>
+        <div class="compare-right">
+          ${badge(d.sentiment)}
+          <span style="font-size:12px;color:var(--muted)">${pct(d.confidence)}</span>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── PLOTS ──────────────────────────────────────────────
+  const ALLOWED_PLOTS = [
+    { value: 'confusion_matrices_all',              label: 'Confusion Matrix — All Models' },
+    { value: 'confusion_matrix_logistic_regression', label: 'Confusion Matrix — Logistic Regression' },
+    { value: 'confusion_matrix_naive_bayes',         label: 'Confusion Matrix — Naive Bayes' },
+    { value: 'confusion_matrix_random_forest',       label: 'Confusion Matrix — Random Forest' },
+    { value: 'metrics_comparison',                   label: 'Metrics Comparison' },
+    { value: 'sentiment_over_time',                  label: 'Sentiment Over Time' },
+    { value: 'top_unigrams',                         label: 'Top Unigrams' },
+  ];
+
+  function loadPlotList() {
+    const sel = $('plot-select');
+    sel.innerHTML = '<option value="">— choose a plot —</option>';
+    ALLOWED_PLOTS.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.value; opt.textContent = p.label;
+      sel.appendChild(opt);
+    });
+  }
+
+  function loadPlot() {
+    const name = $('plot-select').value;
+    const box  = $('plot-container');
+    if (!name) { box.innerHTML = '<div class="plot-empty">Select a plot from the dropdown above</div>'; return; }
+    box.innerHTML = '<span class="spinner"></span>';
+    const img = new Image();
+    img.onload  = () => { box.innerHTML = ''; box.appendChild(img); };
+    img.onerror = () => { box.innerHTML = '<div class="plot-empty">Failed to load image.</div>'; };
+    img.src = api() + '/stats/plot/' + name;
+    img.style.maxWidth = '100%';
+  }
+
+  function goToPlot(name) {
+    const btn = document.querySelector('[data-page="plots"]');
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    $('page-plots').classList.add('active');
+    if (btn) btn.classList.add('active');
+    loadPlotList(); $('plot-select').value = name; loadPlot();
+  }
+
+  // ── HEALTH ─────────────────────────────────────────────
+  async function loadHealth() {
+    $('health-rows').innerHTML = '<span class="spinner"></span>';
+    try {
+      const d = await apiFetch('/health');
+      $('health-rows').innerHTML = `
+        <div class="health-row"><div class="h-dot ${d.status === 'healthy' ? 'ok' : 'err'}"></div><div class="health-label">API Status</div><div class="health-value">${d.status}</div></div>
+        <div class="health-row"><div class="h-dot ok"></div><div class="health-label">Version</div><div class="health-value">${d.version || '—'}</div></div>
+        <div class="health-row"><div class="h-dot ok"></div><div class="health-label">Models Loaded</div><div class="health-value">${(d.models_loaded || []).length}</div></div>`;
+
+      const models = d.models_loaded || [];
+      $('health-models').innerHTML = models.length
+        ? `<div class="model-chips">${models.map(m => `<span class="model-chip">${m}</span>`).join('')}</div>`
+        : '<span style="color:var(--light);font-size:13px">None loaded.</span>';
+
+      $('status-dot').className    = 'online';
+      $('status-text').textContent = 'Connected';
+    } catch (e) {
+      $('health-rows').innerHTML   = `<div class="alert alert-err">⚠ ${e.message}</div>`;
+      $('health-models').innerHTML = '';
+      $('status-dot').className    = 'offline';
+      $('status-text').textContent = 'Offline';
+    }
+  }
+
+  // ── Init ───────────────────────────────────────────────
+  checkHealth();
+</script>
+</body>
+</html>
