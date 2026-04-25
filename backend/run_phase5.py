@@ -1,10 +1,6 @@
 """
 Run Phase 5: Hyperparameter Tuning.
 Usage: python run_phase5.py
-
-⚠️  This phase is the slowest — Random Forest tuning can take
-    10-20 minutes depending on your machine.
-    Grab a coffee ☕
 """
 import joblib
 import numpy as np
@@ -54,7 +50,7 @@ def run_tuning():
     rf_tuned, rf_search = tune_random_forest(X_train, y_train)
 
     # ── Step 4: Evaluate tuned models on test set ──────────────
-    logger.info("Step 4: Evaluating tuned models on test set...")
+    logger.info("Step 4: Evaluating tuned models on test set...\n")
     after_results = {
         "logistic_regression": evaluate_tuned_model(
             lr_tuned, "logistic_regression", X_test, y_test),
@@ -65,7 +61,7 @@ def run_tuning():
     }
 
     # ── Step 5: Individual reports for tuned models ────────────
-    logger.info("Step 5: Classification reports for tuned models...")
+    logger.info("Step 5: Classification reports for tuned models...\n")
     for name, result in after_results.items():
         print_model_report(f"TUNED {name}", y_test, result["y_pred"])
 
@@ -82,7 +78,7 @@ def run_tuning():
 
     best_path = MODELS_DIR / "best_model.pkl"
     joblib.dump(best_model, best_path)
-    logger.info(f"\n🏆 Best tuned model '{best_name}' saved → {best_path}")
+    logger.info(f"\n🏆 Best tuned model '{best_name}' saved → {best_path}\n")
 
     # ── Step 9: Save tuned results & CV search objects ─────────
     joblib.dump(after_results, MODELS_DIR / "tuned_results.pkl")

@@ -1,39 +1,39 @@
 {
-  "total_posts": 566,
+  "total_posts": 695,
   "sentiment_distribution": {
     "positive": {
-      "count": 313,
-      "percentage": 55.3
-    },
-    "negative": {
-      "count": 139,
-      "percentage": 24.56
+      "count": 352,
+      "percentage": 50.65
     },
     "neutral": {
-      "count": 114,
-      "percentage": 20.14
+      "count": 178,
+      "percentage": 25.61
+    },
+    "negative": {
+      "count": 165,
+      "percentage": 23.74
     }
   },
   "subreddit_breakdown": {
     "stocks": {
-      "positive": 63,
-      "negative": 28,
-      "neutral": 18
+      "positive": 65,
+      "negative": 32,
+      "neutral": 26
     },
     "IndianStockMarket": {
-      "positive": 39,
-      "neutral": 25,
-      "negative": 15
+      "positive": 46,
+      "neutral": 31,
+      "negative": 16
     },
     "investing": {
-      "positive": 52,
-      "negative": 20,
-      "neutral": 13
+      "positive": 53,
+      "negative": 22,
+      "neutral": 14
     },
     "wallstreetbets": {
-      "positive": 159,
-      "negative": 76,
-      "neutral": 58
+      "positive": 188,
+      "neutral": 107,
+      "negative": 95
     }
   },
   "numeric_stats": {
@@ -56,13 +56,13 @@
       "q75": 0.0
     },
     "word_count": {
-      "mean": 46.12,
-      "median": 24.0,
-      "std": 56.03,
-      "min": "4",
-      "max": "381",
-      "q25": 13.0,
-      "q75": 52.0
+      "mean": 37.12,
+      "median": 17.0,
+      "std": 48.25,
+      "min": "1",
+      "max": "345",
+      "q25": 9.5,
+      "q75": 40.0
     },
     "engagement": {
       "mean": 1.0,
@@ -80,66 +80,66 @@
       "year",
       "stock",
       "total",
-      "post",
       "not",
-      "comment",
       "market",
+      "comment",
       "submission",
-      "want",
       "please",
       "like",
-      "first",
       "best",
+      "first",
+      "want",
       "share",
       "account",
       "seen",
       "gold",
-      "removed",
-      "also"
+      "also",
+      "way",
+      "would"
     ],
     "negative": [
-      "not",
       "market",
+      "not",
       "would",
       "like",
-      "stock",
       "one",
-      "deal",
+      "stock",
       "trade",
+      "deal",
       "people",
       "year",
       "company",
-      "going",
       "see",
       "china",
       "nothing",
+      "buy",
       "back",
       "money",
+      "going",
       "way",
-      "buy",
       "think"
     ],
     "neutral": [
       "market",
-      "removed",
       "buy",
       "stock",
-      "2032",
-      "research",
       "img",
       "emote",
       "2th52",
+      "2032",
+      "research",
+      "not",
       "reach",
       "globally",
       "cagr",
       "allied",
-      "not",
-      "one",
       "know",
-      "year",
       "last",
+      "one",
+      "year",
       "billion",
-      "get"
+      "get",
+      "make"
     ]
   },
   "available_plots": [

@@ -27,7 +27,7 @@ def remove_outliers_iqr(df: pd.DataFrame, column: str) -> pd.DataFrame:
     removed = before - len(df)
 
     logger.info(f"IQR [{column}]: removed {removed} outliers "
-                f"(kept {len(df)} rows, bounds=[{lower:.1f}, {upper:.1f}])")
+                f"(kept {len(df)} rows)")
     return df
 
 

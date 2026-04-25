@@ -22,6 +22,7 @@ def run_training():
     y_test  = joblib.load(MODELS_DIR / "y_test.pkl")
 
     logger.info(f"  X_train: {X_train.shape} | X_test: {X_test.shape}")
+    #x_train = (556 samples , 1714 features) 
 
     # ── Step 2: Train all models ───────────────────────────────
     logger.info("Step 2: Training all models...")
