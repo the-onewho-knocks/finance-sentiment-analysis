@@ -1,20 +1,34 @@
 """
+backend/main.py
+───────────────
 Finance Sentiment Intelligence System — FastAPI Backend
-Run with: uvicorn backend.main:app --reload --port 8000
+
+Changes from v1:
+  • Prometheus /metrics endpoint via prometheus-fastapi-instrumentator
+  • Request-level metrics (latency, status codes, endpoint labels)
+  • Startup exports current dataset size to Prometheus gauge
+
+Run with:
+    uvicorn backend.main:app --reload --port 8000
 """
+
 from contextlib import asynccontextmanager
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-from pathlib import Path
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from backend.routes.analyze import router as analyze_router
 from backend.routes.stats   import router as stats_router
 from backend.services.predictor import get_predictor
 from backend.schemas.models import HealthResponse
+from src.utils.config import RAW_DATA_FILE
 from src.utils.logger import get_logger
+from src.metrics.prometheus_metrics import posts_in_raw_dataset
 
 logger = get_logger(__name__)
 
@@ -22,22 +36,29 @@ PLOTS_DIR = Path("data/plots")
 PLOTS_DIR.mkdir(parents=True, exist_ok=True)
 
 
-# ── Lifespan (startup / shutdown) ────────────────────────────────────────────
+# ── Lifespan (startup / shutdown) ─────────────────────────────────────────────
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """
-    Startup: pre-load the predictor singleton so the first
-    request doesn't pay the model-loading cost.
-    """
-    logger.info("🚀 Starting Finance Sentiment Intelligence API...")
+    logger.info("🚀 Starting Finance Sentiment Intelligence API…")
     get_predictor()   # warms up model loading
+
+    # Sync dataset size to Prometheus on startup
+    try:
+        import pandas as pd
+        if RAW_DATA_FILE.exists():
+            df = pd.read_csv(RAW_DATA_FILE, usecols=["id"])
+            posts_in_raw_dataset.set(len(df))
+            logger.info(f"📊 Prometheus gauge set: {len(df)} rows in raw dataset")
+    except Exception as exc:
+        logger.warning(f"Could not pre-populate dataset gauge: {exc}")
+
     logger.info("✅ API ready — all models loaded.")
     yield
     logger.info("🛑 Shutting down API.")
 
 
-# ── App definition ────────────────────────────────────────────────────────────
+# ── App definition ─────────────────────────────────────────────────────────────
 
 app = FastAPI(
     title       = "Finance Sentiment Intelligence API",
@@ -57,6 +78,7 @@ and r/wallstreetbets.
 | `GET`  | `/stats/plot/{name}` | Serve a visualization plot |
 | `GET`  | `/stats/plots` | List all available plots |
 | `GET`  | `/health` | API health check |
+| `GET`  | `/metrics` | Prometheus metrics scrape endpoint |
 
 ### Models available
 - **Logistic Regression** (tuned)
@@ -64,7 +86,7 @@ and r/wallstreetbets.
 - **Random Forest** (tuned)
 - **best** — automatically selected highest-F1 model
     """,
-    version     = "1.0.0",
+    version     = "2.0.0",
     lifespan    = lifespan,
     docs_url    = "/docs",
     redoc_url   = "/redoc",
@@ -75,7 +97,7 @@ and r/wallstreetbets.
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins     = ["*"],   # tighten this in production
+    allow_origins     = ["*"],   # tighten in production
     allow_credentials = True,
     allow_methods     = ["*"],
     allow_headers     = ["*"],
@@ -84,7 +106,21 @@ app.add_middleware(
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 
-# ── Static files (serve plots directly) ───────────────────────────────────────
+# ── Prometheus instrumentation ─────────────────────────────────────────────────
+# This adds /metrics endpoint automatically and instruments all routes.
+
+Instrumentator(
+    should_group_status_codes=False,
+    should_ignore_untemplated=True,
+    should_respect_env_var=False,
+    should_instrument_requests_inprogress=True,
+    excluded_handlers=["/metrics", "/health"],
+    inprogress_name="fastapi_inprogress",
+    inprogress_labels=True,
+).instrument(app).expose(app, endpoint="/metrics", tags=["Monitoring"])
+
+
+# ── Static files ───────────────────────────────────────────────────────────────
 
 app.mount(
     "/plots",
@@ -108,6 +144,7 @@ async def root() -> dict:
         "docs":    "/docs",
         "redoc":   "/redoc",
         "health":  "/health",
+        "metrics": "/metrics",
     }
 
 
@@ -123,7 +160,7 @@ async def health_check() -> HealthResponse:
     return HealthResponse(
         status        = "healthy",
         models_loaded = predictor.loaded_models,
-        version       = "1.0.0",
+        version       = "2.0.0",
     )
 
 
@@ -131,11 +168,7 @@ async def health_check() -> HealthResponse:
 async def not_found_handler(request, exc):
     return JSONResponse(
         status_code = 404,
-        content     = {
-            "error":   "Endpoint not found",
-            "docs":    "/docs",
-            "status":  "error",
-        },
+        content     = {"error": "Endpoint not found", "docs": "/docs", "status": "error"},
     )
 
 
@@ -143,8 +176,5 @@ async def not_found_handler(request, exc):
 async def server_error_handler(request, exc):
     return JSONResponse(
         status_code = 500,
-        content     = {
-            "error":  "Internal server error",
-            "status": "error",
-        },
+        content     = {"error": "Internal server error", "status": "error"},
     )
