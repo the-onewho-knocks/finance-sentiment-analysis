@@ -1,0 +1,247 @@
+{
+  "uid": "sentiment-intelligence",
+  "title": "Finance Sentiment Intelligence",
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "5s",
+  "panels": [
+
+    {
+      "type": "stat",
+      "title": "Total Posts Scraped",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "targets": [
+        { "expr": "sum(reddit_posts_scraped_total)", "refId": "A" }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Posts in Raw Dataset",
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+      "targets": [
+        { "expr": "reddit_posts_in_raw_dataset_total", "refId": "A" }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Total API Predictions",
+      "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
+      "targets": [
+        { "expr": "sum(sentiment_api_predictions_total)", "refId": "A" }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Active Scrape Jobs",
+      "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
+      "targets": [
+        { "expr": "reddit_active_scrape_jobs", "refId": "A" }
+      ]
+    },
+
+    {
+      "type": "timeseries",
+      "title": "Posts Scraped / sec (by Subreddit)",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "rate(reddit_posts_scraped_total[1m])",
+          "legendFormat": "{{subreddit}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "API Requests / sec",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "rate(sentiment_api_requests_total[1m])",
+          "legendFormat": "{{method}} {{endpoint}} {{status_code}}",
+          "refId": "A"
+        }
+      ]
+    },
+
+    {
+      "type": "timeseries",
+      "title": "Prediction Latency p95 (by Model)",
+      "gridPos": { "x": 0, "y": 10, "w": 24, "h": 6 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, rate(sentiment_api_prediction_latency_seconds_bucket[5m]))",
+          "legendFormat": "{{model}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "s" }
+      }
+    },
+
+    {
+      "type": "stat",
+      "title": "Positive Predictions",
+      "gridPos": { "x": 0, "y": 16, "w": 8, "h": 4 },
+      "targets": [
+        {
+          "expr": "sum(sentiment_api_predictions_total{predicted_sentiment=\"positive\"})",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "color": { "fixedColor": "green", "mode": "fixed" } }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Neutral Predictions",
+      "gridPos": { "x": 8, "y": 16, "w": 8, "h": 4 },
+      "targets": [
+        {
+          "expr": "sum(sentiment_api_predictions_total{predicted_sentiment=\"neutral\"})",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "color": { "fixedColor": "orange", "mode": "fixed" } }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Negative Predictions",
+      "gridPos": { "x": 16, "y": 16, "w": 8, "h": 4 },
+      "targets": [
+        {
+          "expr": "sum(sentiment_api_predictions_total{predicted_sentiment=\"negative\"})",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "color": { "fixedColor": "red", "mode": "fixed" } }
+      }
+    },
+
+    {
+      "type": "timeseries",
+      "title": "Predictions Over Time (by Sentiment)",
+      "gridPos": { "x": 0, "y": 20, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "rate(sentiment_api_predictions_total[1m])",
+          "legendFormat": "{{predicted_sentiment}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Predictions Over Time (by Model)",
+      "gridPos": { "x": 12, "y": 20, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "sum by (model) (rate(sentiment_api_predictions_total[1m]))",
+          "legendFormat": "{{model}}",
+          "refId": "A"
+        }
+      ]
+    },
+
+    {
+      "type": "stat",
+      "title": "Total Scrape Errors",
+      "gridPos": { "x": 0, "y": 26, "w": 6, "h": 4 },
+      "targets": [
+        { "expr": "sum(reddit_scrape_errors_total)", "refId": "A" }
+      ],
+      "fieldConfig": {
+        "defaults": { "color": { "fixedColor": "red", "mode": "fixed" } }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Rate Limit Hits",
+      "gridPos": { "x": 6, "y": 26, "w": 6, "h": 4 },
+      "targets": [
+        { "expr": "sum(reddit_scrape_rate_limit_hits_total)", "refId": "A" }
+      ],
+      "fieldConfig": {
+        "defaults": { "color": { "fixedColor": "orange", "mode": "fixed" } }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Unique Tickers Seen",
+      "gridPos": { "x": 12, "y": 26, "w": 6, "h": 4 },
+      "targets": [
+        { "expr": "reddit_unique_tickers_current", "refId": "A" }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Requests In Progress",
+      "gridPos": { "x": 18, "y": 26, "w": 6, "h": 4 },
+      "targets": [
+        { "expr": "sum(fastapi_inprogress)", "refId": "A" }
+      ]
+    },
+
+    {
+      "type": "timeseries",
+      "title": "Scrape Duration by Subreddit (seconds)",
+      "gridPos": { "x": 0, "y": 30, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, rate(reddit_scrape_duration_seconds_bucket[5m]))",
+          "legendFormat": "{{subreddit}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "s" }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Scrape Errors Over Time",
+      "gridPos": { "x": 12, "y": 30, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "rate(reddit_scrape_errors_total[1m])",
+          "legendFormat": "{{subreddit}} — {{error_type}}",
+          "refId": "A"
+        }
+      ]
+    },
+
+    {
+      "type": "table",
+      "title": "Model Accuracy",
+      "gridPos": { "x": 0, "y": 36, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "model_training_accuracy",
+          "legendFormat": "{{model_name}}",
+          "refId": "A"
+        }
+      ],
+      "options": { "showHeader": true }
+    },
+    {
+      "type": "table",
+      "title": "Model F1 Score",
+      "gridPos": { "x": 12, "y": 36, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "model_training_f1_score",
+          "legendFormat": "{{model_name}}",
+          "refId": "A"
+        }
+      ],
+      "options": { "showHeader": true }
+    }
+
+  ]
+}

@@ -94,11 +94,13 @@ and r/wallstreetbets.
 
 
 # ── Middleware ─────────────────────────────────────────────────────────────────
+# FIX: allow_credentials=True is invalid with allow_origins=["*"].
+# Use specific origins if you need credentials, otherwise set credentials to False.
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins     = ["*"],   # tighten in production
-    allow_credentials = True,
+    allow_origins     = ["*"],
+    allow_credentials = False,   # was True — invalid with wildcard origins
     allow_methods     = ["*"],
     allow_headers     = ["*"],
 )

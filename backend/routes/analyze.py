@@ -87,7 +87,6 @@ backend/routes/analyze.py
 ─────────────────────────
 Sentiment analysis endpoint.
 
-Changes from v1:
   • Records api_predictions_total counter per model + sentiment
   • Records api_prediction_latency_seconds histogram per model
 """

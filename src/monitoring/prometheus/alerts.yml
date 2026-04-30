@@ -1,0 +1,67 @@
+groups:
+  - name: sentiment-alerts
+    rules:
+
+      # API is unreachable
+      - alert: SentimentAPIDown
+        expr: up{job="sentiment_api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Sentiment API is DOWN"
+          description: "Prometheus cannot scrape the FastAPI metrics endpoint."
+
+      # High prediction latency
+      - alert: HighPredictionLatency
+        expr: >
+          histogram_quantile(
+            0.95,
+            rate(sentiment_api_prediction_latency_seconds_bucket[5m])
+          ) > 1.0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High prediction latency"
+          description: "p95 prediction latency is above 1 second."
+
+      # Scraping errors detected
+      - alert: ScrapeErrorsDetected
+        expr: increase(reddit_scrape_errors_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Reddit scraping errors detected"
+          description: "Errors occurred while scraping Reddit data."
+
+      # No posts being scraped
+      - alert: NoPostsScraped
+        expr: rate(reddit_posts_scraped_total[10m]) == 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "No Reddit posts scraped"
+          description: "No posts have been scraped in the last 10 minutes."
+
+      # Rate limit hits increasing
+      - alert: RateLimitHitsHigh
+        expr: increase(reddit_scrape_rate_limit_hits_total[5m]) > 5
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Reddit API rate limiting detected"
+          description: "More than 5 rate limit hits in the last 5 minutes."
+
+      # High API request volume
+      - alert: HighAPIRequestRate
+        expr: rate(sentiment_api_requests_total[1m]) > 50
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High API request rate"
+          description: "API is receiving more than 50 requests/sec."
