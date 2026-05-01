@@ -1,4 +1,4 @@
-# 🏦 Finance Sentiment Intelligence System
+# Finance Sentiment Intelligence System
 
 A machine-learning pipeline that scrapes Reddit finance communities, classifies post sentiment (positive / neutral / negative), and exposes results through a FastAPI REST API with a live HTML dashboard and full Prometheus + Grafana monitoring.
 
