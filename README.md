@@ -282,6 +282,8 @@ Plots are also served statically at `/plots/<filename>` and listed via `GET /sta
 
 ---
 
-## License
+## Author
+**Hardik Borse** | [LinkedIn](https://www.linkedin.com/in/hardik-borse-aa7729324/) | [Email](mailto:borsehardik@gmail.com)
 
-MIT
+## License
+This project is licensed under the **Apache License 2.0**.
