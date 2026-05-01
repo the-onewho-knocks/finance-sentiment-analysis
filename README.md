@@ -233,7 +233,7 @@ Three classifiers are trained on TF-IDF + numeric features and evaluated by weig
 |-------|-------|
 | Logistic Regression | Tuned via GridSearchCV |
 | Naive Bayes | Tuned via GridSearchCV |
-| Random Forest | Tuned via GridSearchCV |
+| Random Forest | Tuned via RandomSearchCV |
 | **best** | Auto-selected highest F1 model |
 
 **Preprocessing steps applied before training:**
