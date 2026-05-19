@@ -1,14 +1,38 @@
+# global:
+#   scrape_interval: 15s
+#   evaluation_interval: 15s
+
+# scrape_configs:
+
+#   # - job_name: "prometheus"
+#   #   static_configs:
+#   #     - targets: ["localhost:9091"]
+#   - job_name: 'pushgateway'
+#   honor_labels: true
+#   static_configs:
+#     - targets: ['pushgateway:9091']
+
+#   - job_name: "sentiment_api"
+#     metrics_path: /metrics
+#     static_configs:
+#       - targets: ["localhost:8000"]
+
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
 
 scrape_configs:
 
-  - job_name: "prometheus"
+  # FIX: honor_labels and static_configs were at the wrong indent level —
+  # they must be children of the job entry, not siblings of job_name.
+  - job_name: 'pushgateway'
+    honor_labels: true
     static_configs:
-      - targets: ["localhost:9091"]
+      - targets: ['localhost:9091']
 
   - job_name: "sentiment_api"
     metrics_path: /metrics
     static_configs:
+      # FIX: inside Docker, services talk to each other by service name, not
+      # localhost. "localhost" resolves to the Prometheus container itself.
       - targets: ["localhost:8000"]
